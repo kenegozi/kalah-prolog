@@ -1,5 +1,10 @@
-%pits(player1, 6, 6, 6, 6, 6, 6)
-pits(3).
+/***********************************************************************
+	Program	:	Kalah game in PROLOG
+	Written by	:	Ken Egozi
+	File		:	moves.pl
+	Description	:	moving between states
+***********************************************************************/
+
 move(Board, LastPit, SeedsInHand, NewBoard) :-
 	step(Board, LastPit, SeedsInHand, NewBoard, NewPit, NewSeedsInHand).
 
