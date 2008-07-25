@@ -144,59 +144,62 @@ move__when_ends_within_same_player_pits__works :-
 	P1P=pits(player1,3,3,3,0,0,0,0),
 	P2P=pits(player2,3,3,3,0,0,0,0),
 	Last=player1/1,
-	move(P1P/P2P,Last,4,N).
+	move(player1,P1P/P2P,Last,4,N).
 
 
 /***********************************************************************
 % moves/step
 ***********************************************************************/
 tests(moves/step, [
-	set_pits,
+	set_pits(3),
 	step__when_ends_within_same_player_pits__works,
-	step__when_ends_within_next_player_pits__works
+	step__when_ends_within_next_player_pits__works,
+	step__when_ends_back_in_player_pits__works
 ]).
 
 step__when_ends_within_same_player_pits__works :-
-	P1P=pits(player1,0,0,0,0,0,0,0),
-	P2P=pits(player2,0,0,0,0,0,0,0),
-	step(P1P/P2P, player1/1, 1, NewP1P/P2P, _, _),
-	NewP1P=pits(player1,0,1,0,0,0,0,0).
+	P1P=pits(player1,0,0,0,0),
+	P2P=pits(player2,0,0,0,0),
+	step(player1, P1P/P2P, player1/1, 1, NewP1P/P2P, _, _),
+	NewP1P=pits(player1,0,1,0,0).
 	
 step__when_ends_within_next_player_pits__works :-
-	P1P=pits(player1,0,0,0,0,0,0,0),
-	P2P=pits(player2,0,0,0,0,0,0,0),
-	step(P1P/P2P, player1/1, 7, NewP1P/NewP2P, _, _),
-	NewP1P=pits(player1,0,1,1,1,1,1,1),
-	NewP2P=pits(player2,1,0,0,0,0,0,0).
+	P1P=pits(player1,0,0,0,0),
+	P2P=pits(player2,0,0,0,0),
+	step(player1, P1P/P2P, player1/1, 4, NewP1P/NewP2P, _, _),
+	NewP1P=pits(player1,0,1,1,1),
+	NewP2P=pits(player2,1,0,0,0).
+
+step__when_ends_back_in_player_pits__works :-
+	P1P=pits(player1,0,0,0,0),
+	P2P=pits(player2,0,0,0,0),
+	step(player1, P1P/P2P, player1/1, 8, NewP1P/NewP2P, _, _),
+	NewP1P=pits(player1,2,1,1,1),
+	NewP2P=pits(player2,1,1,1,0).
 
 
 /***********************************************************************
 % moves/next_pit
 ***********************************************************************/
 tests(moves/next_pit, [
-	next_pit__when_in_p1_kalah__move_to_p2,
-	next_pit__when_in_p2_kalah__move_to_p1,
-	next_pit__when_in_p1_but_not_in_kalah__stay_with_p1,
-	next_pit__when_in_p2_but_not_in_kalah__stay_with_p2
+	set_pits(3),
+	next_pit__when_in_players_first_pit__moves_to_next,
+	next_pit__when_in_players_last_pit__moves_to_kalah,
+	next_pit__when_in_players_kalah__move_to_opponents_first,
+	next_pit__when_in_opponents_last_pit__moves_to_players_first
 ]).
 
-next_pit__when_in_p1_kalah__move_to_p2 :-
-	set_pits(3),
-	next_pit(player1/4, player2/1).
+next_pit__when_in_players_first_pit__moves_to_next :-
+	next_pit(player1, player1/1, player1/2).
 
-next_pit__when_in_p2_kalah__move_to_p1 :-
-	set_pits(3),
-	next_pit(player2/4, player1/1).
+next_pit__when_in_players_last_pit__moves_to_kalah :-
+	next_pit(player1, player1/3, player1/4).
 
-next_pit__when_in_p1_but_not_in_kalah__stay_with_p1 :-
-	set_pits,
-	next_pit(player1/1, player1/2).
+next_pit__when_in_players_kalah__move_to_opponents_first :-
+	next_pit(player1, player1/4, player2/1).
 
-next_pit__when_in_p2_but_not_in_kalah__stay_with_p2 :-
-	set_pits,
-	next_pit(player2/1, player2/2).
-
-
+next_pit__when_in_opponents_last_pit__moves_to_players_first :-
+	next_pit(player1, player2/3, player1/1).
 
 /***********************************************************************
 % setup helpers
