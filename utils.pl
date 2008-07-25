@@ -9,16 +9,27 @@
 ***********************************************************************/
 
 
+% Usage: conc(L1,L2,L1_concatenated_with_L2)
 conc([], L, L) :- !.
 conc([H|T1], L2, [H|T2]) :-
 	conc(T1, L2, T2).
 
 % Usage: in_range(THE_INPUT, MINVALUE-MAXVALUE)
-% The predicate is non deterministic so do not use it in
 % a different manner
-in_range(X, Min-Max) :-
-  X >= Min, 
-  X =< Max.
+is_in_range(X, LBound-UBound) :-
+  X >= LBound, 
+  X =< UBound.
+
+% in_range(LBound, X, UBound)
+% The predicate is non deterministic so do not use it in
+in_range(X, X-X) :- !.
+in_range(X, X-UBound) :- 
+	X < UBound.
+in_range(X, LBound-UBound) :-
+	LBound =< UBound,
+	NewLBound is LBound + 1,
+	in_range(X, NewLBound-UBound).
+
 
 % Useful to initialise a list with repeating values
 % Usage: create_list(LIST_TO_CREATE, LENGTH, VALUE_TO_PUT_IN_EACH_NODE)
