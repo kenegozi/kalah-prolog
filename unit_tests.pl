@@ -6,6 +6,10 @@
 	Usage		:	simply call run_tests/0
 ***********************************************************************/
 
+test(Module/Predicate/When/What, Test) :-
+	TODO.
+
+
 run_tests  :-
 	dynamic([
 		tests_passed/1,

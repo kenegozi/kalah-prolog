@@ -6,6 +6,8 @@
 ***********************************************************************/
 
 
+
+
 /***********************************************************************
 % utils/is_in_range
 ***********************************************************************/
@@ -62,6 +64,90 @@ create_list__always__creates_the_list_with_the_correct_length :-
 	length(List, 3).
 	
 
+/***********************************************************************
+% moves/put_seeds
+***********************************************************************/
+/*
+tests(moves/put_seeds, [
+	set_pits,
+	put_seeds__enough_for_current_player__works_and_no_seeds_are_left,
+	put_seeds__enough_for_current_kanah__works_and_no_seeds_are_left,
+	put_seeds__more_than_enough_seeds__works_and_seeds_are_left
+]).
+*/
+test_moves(setup, (
+	assert(a)
+)).
+test_moves(teardown, (
+	retract(a)
+)).
+test_moves(put_seeds/enough_for_current_player__works_and_no_seeds_are_left, ( 
+	a
+%	Pits=pits(player1,1,1,1,1,1,1,1),
+%	put_seeds(Pits, 1, 6, NewPits, SeedsLeft),
+%	NewPits=pits(player1,2,2,2,2,2,2,1),
+%	SeedsLeft=0
+)).
+
+test_moves(put_seeds/enough_for_current_kanah__works_and_no_seeds_are_left, ( 
+a
+%	Pits=pits(player1,1,1,1,1,1,1,1),
+%	put_seeds(Pits, 2, 6, NewPits, SeedsLeft),
+%	NewPits=pits(player1,1,2,2,2,2,2,2),
+%	SeedsLeft=0
+)).
+
+test_moves(put_seeds/more_than_enough_seeds__works_and_seeds_are_left, ( 
+a
+%	Pits=pits(player1,1,1,1,1,1,1,1),
+%	put_seeds(Pits, 4, 6, NewPits, SeedsLeft),
+%	NewPits=pits(player1,1,1,1,2,2,2,2),
+%	SeedsLeft=2
+)).
+
+put_seeds(pits(player1,1,1,1,1,1,1,1), _, _, pits(player1,2,2,2,2,2,2,1), 0).
+
+test_moves :-
+	(test_moves(setup, Setup),!;Setup
+	bagof((Predicate/Name,Test), test_moves(Predicate/Name,Test), [T|Ts]),
+	foreach([T|Ts]).
+
+foreach([]):-!.
+foreach([(Predicate/Name,Test)|Ts]):-
+	write('testing '), write(Predicate), write('/'),write(Name),write('...'),
+	assert((run_test:-Test)),
+	(run_test,!, write('OK') ; write('FAIL')),
+	nl,
+	retract((run_test:-Test)),
+	foreach(Ts).
+
+/***********************************************************************
+% moves/get_opposite_pit
+***********************************************************************/
+tests(moves/get_opposite_pit, [
+	get_opposite_pit__for_odd_pits__works,
+	get_opposite_pit__for_even_pits__works
+]).
+
+get_opposite_pit__for_odd_pits__works :-
+	set_pits(3),
+	get_opposite_pit(1, 3).
+
+get_opposite_pit__for_even_pits__works :-
+	set_pits(4),
+	get_opposite_pit(2, 3).
+
+/***********************************************************************
+% moves/empty_pit
+***********************************************************************/
+tests(moves/empty_pit, [
+	empty_pit__works
+]).
+
+empty_pit__works :-
+	Input = pits(player1,10,20,30)/null,
+	empty_pit(player1, Input, 2, 20, Output),
+	Output = pits(player1,10,0,30)/null.
 
 /***********************************************************************
 % utils/conc
@@ -201,9 +287,12 @@ next_pit__when_in_players_kalah__move_to_opponents_first :-
 next_pit__when_in_opponents_last_pit__moves_to_players_first :-
 	next_pit(player1, player2/3, player1/1).
 
+
+
 /***********************************************************************
 % setup helpers
 ***********************************************************************/
+	
 set_pits :-
 	set_pits(6).
 set_pits(P) :-

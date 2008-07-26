@@ -39,5 +39,14 @@ create_list([InitialValue | Tail], Length, InitialValue) :-
 	create_list(Tail, Length1, InitialValue).
 
 
+
+% pop_from_index(List, Index, NewListWith_0_AtIndex, ValueThatWasAtIndex)
+% pop_from_index([1,2,3], 2, [1,0,3], 2).
+pop_from_index([H|T], 1, [0|T], H) :- !.
+pop_from_index([H|T], Index, [H|T1], Val) :- 
+	NewIndex is Index - 1,
+	pop_from_index(T, NewIndex, T1, Val).
+
+
 	
 /**********************************************************************/
