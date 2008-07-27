@@ -5,8 +5,6 @@
 	Description	:	moving between states
 ***********************************************************************/
 
-% 
-
 move(Pos, NewPos) :-
 	select_pit(Pos, MoveData, Pos1),
 	move(Pos1, MoveData, NewPos).
@@ -47,17 +45,32 @@ is_empty_pit(player2, _/P2Pits, PitNo) :- !,
 	arg(ArgNo, P2Pits, 0), !.
  
 
-empty_pit(player1, P1Pits/P2Pits, PitNo, Seeds, NewP1Pits/P2Pits) :-
-	P1Pits =.. P1PitsList,
+empty_pit(Pits, PitNo, Seeds, NewPits) :-
+	Pits =.. PitsList,
 	NodeNo is PitNo + 2,
-	pop_from_index(P1PitsList, NodeNo, NewP1PitsList, Seeds),
-	NewP1Pits =.. NewP1PitsList.
+	pop_from_index(PitsList, NodeNo, NewPitsList, Seeds),
+	NewPits =.. NewPitsList.
 
 move(Turn/P1Pits/P2Pits, Pit, SeedsInHand, NewPos) :-
 	step(Turn/P1Pits/P2Pits, Pit, SeedsInHand, 0, Board, LastPit, 0).
 
 
-select_pit(Turn/P1Pits/P2Pits, Pit/SeedsInHand, Turn/P1Pits1/P2Pits1).
+%select_pit(Pos, MoveData, Pos1),
+
+select_pit(Turn/P1Pits/P2Pits, Turn-PitNumber/SeedsInHand, Turn/P1Pits1/P2Pits1) :-
+	(Turn=player1,!,
+		select_pit(P1Pits, PitNumber/SeedsInHand, P1Pits1),
+		P2Pits1 = P2Pits
+	;
+		select_pit(P2Pits, PitNumber/SeedsInHand, P2Pits1),
+		P1Pits1 = P1Pits
+	).	
+
+select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
+	pits(P),
+	in_range(PitNumber, 1-P),
+	empty_pit(Pits, PitNumber, SeedsInHand, Pits1),
+	SeedsInHand > 0.
 
 % move a single step in a move - putting a seed from the player's
 % hand into the next pit.
