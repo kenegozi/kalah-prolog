@@ -53,7 +53,7 @@ foreach_test([Fact/Test|Rest], Passed/Failed, NewPassed/NewFailed):-
 	;
 		NextFailed is Failed + 1,
 		NextPassed is Passed,
-		write('FAIL: '), write(Fact), nl
+		nl, write('   FAIL: '), write(Fact)
 	),
 	retract((run_test:-Test)),
 	foreach_test(Rest, NextPassed/NextFailed, NewPassed/NewFailed).
@@ -71,8 +71,10 @@ write_tests_summary(Passed/Failed) :-
 	nl.
 
 reset_all_tests:-
-	retractall(test_def(_/_/_)).
-
+	retractall(run_test),
+	retractall(test_def(_/_/_)),
+	reconsult('moves_tests'),
+	reconsult('utils_tests').
 
 
 % Asserts

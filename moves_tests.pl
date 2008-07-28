@@ -4,7 +4,6 @@
 	File		:	test_fixtures.pl
 	Description	:	unit tests for moves.pl
 ***********************************************************************/
-
 :- ensure_loaded('unit_tests').
 
 
@@ -14,9 +13,9 @@
 :- setup_tests('empty_pit/5').
 
 :- test('works'/(
-	Input = pits(player1,10,20,30)/null,
-	empty_pit(player1, Input, 2, 20, Output),
-	Output = pits(player1,10,0,30)/null
+	Input = pits(player1,10,20,30),
+	empty_pit(Input, 2, 20, Output),
+	Output = pits(player1,10,0,30)
 )).
 
 :- end_setup_tests.
@@ -172,10 +171,7 @@ next_pit__when_in_opponents_last_pit__moves_to_players_first :-
 	SeedsLeft=2
 )).
 
-:- end_setup_tests.
-
-put_seeds(pits(player1,1,1,1,1,1,1,1), _, _, pits(player1,2,2,2,2,2,2,1), 0).
-	
+:- end_setup_tests.	
 
 /***********************************************************************
 % moves - get_opposite_pit/2
@@ -199,18 +195,18 @@ put_seeds(pits(player1,1,1,1,1,1,1,1), _, _, pits(player1,2,2,2,2,2,2,1), 0).
 	select_pit(Pits, Number/Seeds, NewPits).
 ***********************************************************************/
 :- setup_tests('select_pit/3').
-
 :- test('when all has values -> selects all'/(
-	
-	select_pit(pits(player1,1,2,0), N/S, P),
+	bagof(N/S/P, select_pit(pits(player1,2,4,0), N/S, P), Selected),
+	Selected=[1 / 2 / pits(player1,0,4,0),2 / 4 / pits(player1,2,0,0)]
 )).
-
-:- test
-N = S = 2 ,
-P = pits(player1,1,0,0)
-
-| ?- select_pit(pits(player1,0,2,0), N/S, P).
-N
+:- test('when one has value -> selects only that one'/(
+	bagof(N/S/P, select_pit(pits(player1,0,3,0), N/S, P), Selected),
+	Selected=[2 / 3 / pits(player1,0,0,0)]
+)).
+:- test('when none has value -> fail'/(
+	not bagof(N/S/P, select_pit(pits(player1,0,0,0), N/S, P), _)
+)).
+:- end_setup_tests.
 
 /***********************************************************************
 % setup helpers

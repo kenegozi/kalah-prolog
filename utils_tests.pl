@@ -25,7 +25,7 @@
 )).
 
 :- test('when given out of range input -> fails'/(
-	not is_in_range(2, 1-3)
+	not is_in_range(4, 1-3)
 )).
 :- end_setup_tests.
 
@@ -79,3 +79,28 @@ conc([1,2], [], [1,2])
 conc([1,2], [3,4], [1,2,3,4])
 )). 
 :- end_setup_tests.
+
+
+
+/***********************************************************************
+	copy_list_and_add(List, Skip, ToAdd, NewList) conc/3
+***********************************************************************/
+
+:- setup_tests('copy_list_and_add/4'). 
+:- test('can process part of the list'/(
+setof(Skip/ToAdd, (MaxToAdd/X/L/L_AsFunctor)^(
+	in_range(Skip, 0-3),
+	MaxToAdd is 4 - Skip,
+	in_range(ToAdd, 0-MaxToAdd),
+	copy_list_and_add([0,0,0,0], Skip, ToAdd, L),
+	L_AsFunctor =.. [list|L],
+	in_range(X, 1-4),
+	( X =< Skip,
+		arg(X, L_AsFunctor, 0)
+	;
+		arg(X, L_AsFunctor, 1)
+	)), Options),
+	Options = [0/1,0/2,0/3,0/4,1/0,1/1,1/2,1/3,2/0,2/1,2/2,3/0,3/1]
+)). 
+
+

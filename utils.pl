@@ -48,5 +48,18 @@ pop_from_index([H|T], Index, [H|T1], Val) :-
 	pop_from_index(T, NewIndex, T1, Val).
 
 
+
+
+% copy_list_and_add(List, Skip, ToAdd, NewList) conc/3
+copy_list_and_add(L, _, 0, L) :- !.
+copy_list_and_add([H|T], Skip, ToAdd, [H|T1]) :-
+	Skip > 0, !, 
+	Skip1 is Skip - 1,
+	copy_list_and_add(T, Skip1, ToAdd, T1).
+copy_list_and_add([H|T], 0, ToAdd, [H1|T1]) :-
+	H1 is H + 1,
+	ToAdd1 is ToAdd - 1,
+	copy_list_and_add(T, 0, ToAdd1, T1).
+
 	
 /**********************************************************************/

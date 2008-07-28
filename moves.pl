@@ -72,6 +72,25 @@ select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
 	empty_pit(Pits, PitNumber, SeedsInHand, Pits1),
 	SeedsInHand > 0.
 
+
+% put_seeds/5
+% put_seeds(Pits, StartAt,SeedsInHand,NewPits, SeedsLeft).
+put_seeds(Pits, _, 0, Pits, 0) :- !.
+put_seeds(Pits, StartAt, SeedsInHand, NewPits, SeedsLeft) :-
+	Pits =.. [pits|PlayerAndPitsList],
+	len(PlayerAndPitsList, Length),
+	PitsLeft is Length - StartAt,
+	(SeedsInHand =< PitsLeft, !,
+		SeedsLeft = 0,
+		ToAdd = SeedsInHand
+	;
+		ToAdd = PitsLeft,
+		SeedsLeft is SeedsInHand - PitsLeft
+	),		
+	copy_list_and_add(PlayerAndPitsList, StartAt, ToAdd, PlayerAndPitsList1),
+	NewPits =.. [pits|PlayerAndPitsList1].
+
+
 % move a single step in a move - putting a seed from the player's
 % hand into the next pit.
 	
