@@ -19,55 +19,6 @@
 )).
 
 :- end_setup_tests.
-
-/***********************************************************************
-% moves/change_list
-***********************************************************************/
-
-/*
-
-tests(moves/change_list, [
-	change_list__add_first__works,
-	change_list__add_middle__works,
-	change_list__add_last__works,
-	change_list__empty_first__works,
-	change_list__add_middle__works,
-	change_list__add_last__works
-]).
-
-change_list__add_first__works :-
-	L = [1,1,1],
-	change_list(L, L1, 1, add),
-	L1 = [2,1,1].
-
-change_list__add_middle__works :-
-	L = [1,1,1],
-	change_list(L, L1, 2, add),
-	L1 = [1,2,1].
-
-change_list__add_last__works :-
-	L = [1,1,1],
-	change_list(L, L1, 3, add),
-	L1 = [1,1,2].
-
-change_list__empty_first__works :-
-	L = [1,1,1],
-	change_list(L, L1, 1, empty),
-	L1 = [0,1,1].
-
-change_list__add_middle__works :-
-	L = [1,1,1],
-	change_list(L, L1, 2, empty),
-	L1 = [1,0,1].
-
-change_list__add_last__works :-
-	L = [1,1,1],
-	change_list(L, L1, 3, empty),
-	L1 = [1,1,0].
-
-
-*/
-
 /***********************************************************************
 % moves/move
 ***********************************************************************/
@@ -83,39 +34,6 @@ move__when_ends_within_same_player_pits__works :-
 	P2P=pits(player2,3,3,3,0,0,0,0),
 	Last=player1/1,
 	move(player1,P1P/P2P,Last,4,N).
-
-*/
-/***********************************************************************
-% moves/step
-***********************************************************************/
-
-/*
-tests(moves/step, [
-	set_pits(3),
-	step__when_ends_within_same_player_pits__works,
-	step__when_ends_within_next_player_pits__works,
-	step__when_ends_back_in_player_pits__works
-]).
-
-step__when_ends_within_same_player_pits__works :-
-	P1P=pits(player1,0,0,0,0),
-	P2P=pits(player2,0,0,0,0),
-	step(player1, P1P/P2P, player1/1, 1, NewP1P/P2P, _, _),
-	NewP1P=pits(player1,0,1,0,0).
-	
-step__when_ends_within_next_player_pits__works :-
-	P1P=pits(player1,0,0,0,0),
-	P2P=pits(player2,0,0,0,0),
-	step(player1, P1P/P2P, player1/1, 4, NewP1P/NewP2P, _, _),
-	NewP1P=pits(player1,0,1,1,1),
-	NewP2P=pits(player2,1,0,0,0).
-
-step__when_ends_back_in_player_pits__works :-
-	P1P=pits(player1,0,0,0,0),
-	P2P=pits(player2,0,0,0,0),
-	step(player1, P1P/P2P, player1/1, 8, NewP1P/NewP2P, _, _),
-	NewP1P=pits(player1,2,1,1,1),
-	NewP2P=pits(player2,1,1,1,0).
 
 */
 /***********************************************************************
@@ -148,30 +66,82 @@ next_pit__when_in_opponents_last_pit__moves_to_players_first :-
 /***********************************************************************
 % moves/put_seeds
 ***********************************************************************/
-:- setup_tests('put_seeds(Pits, StartPitNo, SeedsInHand, NewPits, SeedsLeft)').
+:- setup_tests('put_seeds/7').
 
 :- test('enough for current player works and no seeds are left'/ ( 
 	Pits=pits(player1,1,1,1,1,1,1,1),
-	put_seeds(Pits, 1, 6, NewPits, SeedsLeft),
+	put_seeds(player1, Pits, 1, 6, NewPits, LastPitNo, SeedsLeft),
 	NewPits=pits(player1,2,2,2,2,2,2,1),
+	LastPitNo=6,
 	SeedsLeft=0
 )).
 
 :- test('enough for current kanah works and no seeds are left'/( 
 	Pits=pits(player1,1,1,1,1,1,1,1),
-	put_seeds(Pits, 2, 6, NewPits, SeedsLeft),
+	put_seeds(player1, Pits, 2, 6, NewPits, LastPitNo, SeedsLeft),
 	NewPits=pits(player1,1,2,2,2,2,2,2),
+	LastPitNo=7,
 	SeedsLeft=0
+)).
+
+:- test('enough for opponents kanah will skip the kanah'/( 
+	Pits=pits(player2,1,1,1,1,1,1,1),
+	put_seeds(player1, Pits, 2, 6, NewPits, LastPitNo, SeedsLeft),
+	NewPits=pits(player2,1,2,2,2,2,2,1),
+	LastPitNo=6,
+	SeedsLeft=1
 )).
 
 :- test('more than enough seeds works and seeds are left'/( 
 	Pits=pits(player1,1,1,1,1,1,1,1),
-	put_seeds(Pits, 4, 6, NewPits, SeedsLeft),
+	put_seeds(player1, Pits, 4, 6, NewPits, LastPitNo, SeedsLeft),
 	NewPits=pits(player1,1,1,1,2,2,2,2),
+	LastPitNo=7,
 	SeedsLeft=2
 )).
+:- end_setup_tests.
 
-:- end_setup_tests.	
+:- setup_tests('put_seeds/5').
+:- test('sanity'/(
+	set_pits(4),!,
+	P1Pits=pits(player1,0,1,1,1,0),
+	P2Pits=pits(player2,1,1,1,1,0),
+	put_seeds(player1/P1Pits/P2Pits, player1/1, 3, player1/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo),
+	NewP1Pits=pits(player1,0,2,2,2,0),
+	NewP2Pits=pits(player2,1,1,1,1,0),
+	LastPlayerBoard=player1,
+	LastPitNo=4
+)).
+:- test('players kalah is used'/(
+	set_pits(4),!,
+	P1Pits=pits(player1,0,1,1,1,0),
+	P2Pits=pits(player2,1,1,1,1,0),
+	put_seeds(player1/P1Pits/P2Pits, player1/1, 4, player1/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo),
+	NewP1Pits=pits(player1,0,2,2,2,1),
+	NewP2Pits=pits(player2,1,1,1,1,0),
+	LastPlayerBoard=player1,
+	LastPitNo=5
+)).
+:- test('moving to opponents pits correctly'/(
+	set_pits(4),!,
+	P1Pits=pits(player1,0,1,1,1,0),
+	P2Pits=pits(player2,1,1,1,1,0),
+	put_seeds(player1/P1Pits/P2Pits, player1/1, 6, player1/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo),
+	NewP1Pits=pits(player1,0,2,2,2,1),
+	NewP2Pits=pits(player2,2,2,1,1,0),
+	LastPlayerBoard=player2,
+	LastPitNo=2
+)).
+:- test('opponents kalah is skipped'/(
+	set_pits(4),!,
+	P1Pits=pits(player1,0,1,1,1,0),
+	P2Pits=pits(player2,1,1,1,1,0),
+	put_seeds(player1/P1Pits/P2Pits, player1/1, 9, player1/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo),
+	NewP1Pits=pits(player1,1,2,2,2,1),
+	NewP2Pits=pits(player2,2,2,2,2,0),
+	LastPlayerBoard=player1,
+	LastPitNo=1
+)).
 
 /***********************************************************************
 % moves - get_opposite_pit/2
@@ -217,4 +187,3 @@ set_pits :-
 set_pits(P) :-
 	(retract(pits(_)) ; true),
 	assert(pits(P)).
-
