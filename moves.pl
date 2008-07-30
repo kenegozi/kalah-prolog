@@ -5,34 +5,8 @@
 	Description	:	moving between states
 ***********************************************************************/
 
-move(Pos, NewPos) :-
-	select_pit(Pos, MoveData, Pos1),
-	move(Pos1, MoveData, NewPos).
 
-%move(Pos, Player-PitNo/InHand, NewPos) :-
-
-% if last step was in player's kalah - then he gets another round
-move(Turn-Board, Turn-PitNo/0, NewPos) :-
-	is_kalah(PitNo), !,
-	move(Turn-Board, NewPos).
-
-% if last step is a collect step - then collect
-move(Turn-Board, Turn/PitNo/0, NewPos) :-
-	next_player(Turn, Opposite),
-	get_opposite_pit(PitNo, OppositePitNo),
-	empty_pit(Opposite, Board, OppositePitNo, OppositeSeeds, Board1),
-	(
-		OppositeSeeds > 0, !,
-		empty_pit(Turn, Board1, PitNo, Seeds, Board2),
-		SeedsToAddToKalah is Seeds + OppositeSeeds,
-		add_to_kalah(Turn, Board2, SeedsToAddToKalah, Board3),
-		NewPos = Opposite-Board3
-	;
-		NewPos = Opposite-Board1
-	).
-
-
-get_opposite_pit(PitNo, OppositePitNo) :-
+opposite_pit(PitNo, OppositePitNo) :-
 	is_kalah(KalahPitNo),
 	OppositePitNo is KalahPitNo - PitNo.
 
@@ -72,12 +46,56 @@ select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
 move(P1Pits/P2Pits, player1-PitNumber/SeedsInHand, NewBoard) :-
 */	
 
-% put_seeds/5
-% put_seeds(Pos, From, Seeds, NewPos, To)
+move(Pos, NewPos, [PitNumber|Inner]) :-
+	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
+	step(InitialPos, Turn/PitNumber, SeedsInHand, Pos1, LastBoard/LastPitNumber),
+	(is_kalah(LastPitNumber),!,
+		move(Pos1,NewPos, Inner)
+	;
+		collect_if_needed(Pos1, LastBoard/LastPitNumber, Pos2),
+		next_player(Pos2, NewPos),
+		Inner=[]
+	).
+
+
+collect_if_needed(Turn/P1/P2, LastBoard/_, Turn/P1/P2) :-
+	not LastBoard=Turn,!.
+collect_if_needed(Turn/P1/P2, Turn/LastPitNumber, Turn/P1/P2) :-
+	is_kalah(LastPitNumber),!.
+collect_if_needed(Turn/P1/P2, Turn/LastPitNumber, Turn/P11/P21) :-
+	opposite_pit(LastPitNumber, OppositePitNo),
+	(Turn=player1,!,
+		empty_pit(P2, OppositePitNo, SeedsInOppositePit, Emptied),
+		P2_Temp=Emptied,
+		P1_Temp=P1
+	;
+		empty_pit(P1, OppositePitNo, SeedsInOppositePit, Emptied),
+		P2_Temp=P2,
+		P1_Temp=Emptied
+	),
+	collect_if_needed(Turn/P1_Temp/P2_Temp, Turn/LastPitNumber, SeedsInOppositePit, Turn/P11/P21).
+	
+collect_if_needed(Pos, _, 0, Pos) :- !.
+collect_if_needed(Turn/P1/P2, Turn/LastPitNo, SeedsInOppositePit, Turn/P11/P21) :-
+	(Turn=player1,!,
+		empty_pit(P1, LastPitNo, SeedsInPit, Emptied),
+		ToAdd is SeedsInPit + SeedsInOppositePit,
+		add_to_kalah(Emptied, ToAdd, P11),
+		P21 = P2
+	;
+		empty_pit(P2, LastPitNo, SeedsInPit, Emptied),
+		ToAdd is SeedsInPit + SeedsInOppositePit,
+		add_to_kalah(Emptied, ToAdd, P21),
+		P11 = P1
+	).
+
+
+% step/5
+% step(Pos, From, Seeds, NewPos, To)
 % putting the Seeds taken from pit From into the board,
 % ending with NewPos, where To is the last pit that got a seed
-put_seeds(Turn/P1Pits/P2Pits, From, 0, Turn/P1Pits/P2Pits, From) :- !.
-put_seeds(Turn/P1Pits/P2Pits, CurrentPlayerBoard/TakenFrom, SeedsInHand, Turn/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo) :-
+step(Turn/P1Pits/P2Pits, From, 0, Turn/P1Pits/P2Pits, From) :- !.
+step(Turn/P1Pits/P2Pits, CurrentPlayerBoard/TakenFrom, SeedsInHand, Turn/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo) :-
 	StartAt is TakenFrom + 1,
 	next_player(CurrentPlayerBoard, NextPlayerBoard),
 	(CurrentPlayerBoard=player1, !,
@@ -91,7 +109,7 @@ put_seeds(Turn/P1Pits/P2Pits, CurrentPlayerBoard/TakenFrom, SeedsInHand, Turn/Ne
 		NewP1Pits=P1Pits1 ,NewP2Pits=P2Pits1,
 		LastPlayerBoard=CurrentPlayerBoard, LastPitNo=LastPitNo1
 	;
-		put_seeds(Turn/P1Pits1/P2Pits1, NextPlayerBoard/0, SeedsLeft, Turn/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo)
+		step(Turn/P1Pits1/P2Pits1, NextPlayerBoard/0, SeedsLeft, Turn/NewP1Pits/NewP2Pits, LastPlayerBoard/LastPitNo)
 	).
 	
 % put_seeds/7
@@ -153,29 +171,17 @@ next_pit(Turn, LastPitPlayer/LastPitNo, NextPitPlayer/NextPitNo) :-
 	)
 	.
 
-% will add a seed to the Nth pit in Pits, resulting in NewPits
-add_seed_to_pit(Pits, N, NewPits) :-
-	ArgNo is N + 2,    % first arg is functor, second is the player
+% will add N seeds to the kalah of Pits
+add_to_kalah(Pits, N, NewPits) :-
 	Pits =.. PitsList,
-	change_list(PitsList, NewPitsList, ArgNo, add),
+	add_to_last(PitsList, N, NewPitsList),
 	NewPits =.. NewPitsList.
-
-% change_list(L1, L2, N, add/empty).
-% will copy a list of numbers from L1 to L2, 
-% adding 1 to the Nth or zeroing it
-change_list([H1|T1], [H2|T1], 1, Action) :- !,
-	(
-		Action = add,!,
-		H2 is H1 + 1
-	;
-		H2 = 0
-	).
-change_list([H1|T1], [H1|T2], N, Action) :- !,
-	N1 is N - 1,
-	change_list(T1, T2, N1, Action).
 
 
 % switching players. straightforward
+next_player(Turn/P1/P2, NextTurn/P1/P2):-
+	next_player(Turn, NextTurn).
+
 next_player(player1, player2).
 next_player(player2, player1).
 

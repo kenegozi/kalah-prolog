@@ -50,7 +50,7 @@ pop_from_index([H|T], Index, [H|T1], Val) :-
 
 
 
-% copy_list_and_add(List, Skip, ToAdd, NewList) conc/3
+% copy_list_and_add(List, Skip, ToAdd, NewList)
 copy_list_and_add(L, _, 0, L) :- !.
 copy_list_and_add([H|T], Skip, ToAdd, [H|T1]) :-
 	Skip > 0, !, 
@@ -60,6 +60,16 @@ copy_list_and_add([H|T], 0, ToAdd, [H1|T1]) :-
 	H1 is H + 1,
 	ToAdd1 is ToAdd - 1,
 	copy_list_and_add(T, 0, ToAdd1, T1).
+
+
+%add_to_last(L1, N, L2).
+% L2 is L1, but the last node is incremented by N
+add_to_last([H], N, [H1]):-
+	integer(H),!,
+	H1 is H + N .
+
+add_to_last([H|T], N, [H|T1]):-
+	add_to_last(T, N, T1).
 
 	
 /**********************************************************************/
