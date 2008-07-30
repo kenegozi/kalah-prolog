@@ -45,6 +45,8 @@ select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
 /*
 move(P1Pits/P2Pits, player1-PitNumber/SeedsInHand, NewBoard) :-
 */	
+moves( Pos, PosList) :-
+	bagof(P, move(Pos, P, _), PosList).
 
 move(Pos, NewPos, [PitNumber|Inner]) :-
 	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
@@ -189,7 +191,7 @@ next_player(player2, player1).
 %moves(Turn/P1Pits/P2Pits, PosList) :-
 
 h(_/P1Pits/P2Pits, Val) :- 
-	settings(pits_per_player(PitsPerPlayer)),
+	pits(PitsPerPlayer),!,
 	KalahIndex is PitsPerPlayer + 2,
 	arg(KalahIndex, P1Pits, P1Kalah),
 	arg(KalahIndex, P2Pits, P2Kalah),!,
