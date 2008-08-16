@@ -199,3 +199,36 @@ h(_/P1Pits/P2Pits, Val) :-
 	P2Factor is 2^P2Kalah,
 	Val is P1Factor - P2Factor.
 	
+
+%determine current player
+min_to_move(player1/_/_).
+max_to_move(player2/_/_).
+
+turn(Player) :-
+	pos(Player/_/_).
+
+%determine if the pit numbered K is the kalah
+is_kalah(K) :-
+	pits(P),
+	K is P + 1.
+
+player1_move(PitNo) :-
+	pos(Pos),
+	(select_pit(Pos, player1-PitNo/SeedsInHand, InitialPos),!,
+		step(InitialPos, player1/PitNo, SeedsInHand, Pos1, LastBoard/LastPitNumber),
+		(is_kalah(LastPitNumber),!,
+			set_pos(Pos1),
+			set_game_state(player1_kalah)
+		;
+			collect_if_needed(Pos1, LastBoard/LastPitNumber, Pos2),
+			(Pos1\=Pos2,!,
+				set_game_state(player1_collect)
+			;
+				true
+			),
+			next_player(Pos2, NewPos),
+			set_pos(NewPos)
+		)
+	;
+		set_game_state(no_move)
+	).

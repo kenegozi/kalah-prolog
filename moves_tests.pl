@@ -204,6 +204,3 @@
 	
 set_pits :-
 	set_pits(6). 
-set_pits(P) :-
-	(retract(pits(_)) ; true),
-	assert(pits(P)).

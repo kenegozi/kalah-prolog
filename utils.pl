@@ -1,10 +1,7 @@
 /***********************************************************************
 	Program		:	Kalah game in PROLOG
-
 	Written by	:	Ken Egozi
-	
 	File		:	utils.pl
-
 	Description	:	various useful predicates
 ***********************************************************************/
 
@@ -73,3 +70,11 @@ add_to_last([H|T], N, [H|T1]):-
 
 	
 /**********************************************************************/
+
+% sleeping the current thread - useful for letting the GUI finish work at some
+% cases
+sleep(0):-!.
+sleep(N):-N<0,!.
+sleep(N):-
+	N1 is N - 0.004,
+	sleep(N1).
