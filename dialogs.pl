@@ -41,15 +41,16 @@ on_show(dlg_options):-
 dlg_game_board :- 
 	_S1 = [ws_sysmenu,ws_popup,ws_caption,dlg_ownedbyprolog],
 	_S2 = [ws_child,ws_border,ws_visible],
-	_S3 = [ws_child,ws_visible,ws_tabstop,bs_pushbutton],
-	_S4 = [ws_child,ws_tabstop,ws_visible,bs_pushbutton,bs_text,bs_center,bs_vcenter],
+	_S3 = [ws_child,ws_tabstop,ws_visible,bs_pushbutton,bs_text,bs_center,bs_vcenter],
  
 	pits(Size),
 	board_size(Size, BoardWidth, BoardHeight),
 	WindowHeight is BoardHeight + 100,
 	WindowWidth is BoardWidth + 40,
+	RestartGameX is WindowWidth - 20 - 70,
 	wdcreate(  dlg_game_board,        `Kalah`,      160,  45, WindowWidth , WindowHeight , _S1 ),
 	wccreate( (dlg_game_board,10000), grafix, `Board`,  20, 40,  BoardWidth, BoardHeight, _S2 ),
-	wccreate( (dlg_game_board,10002), button, `End Game`,  50, 10, 70 , 20, _S4 ).
+	wccreate( (dlg_game_board,10001), button, `Start over`,  RestartGameX , 10, 70 , 20, _S3 ),
+	wccreate( (dlg_game_board,10002), button, `End game`,  20, 10, 70 , 20, _S3 ).
 
 game_board( (dlg_game_board,10000) ).

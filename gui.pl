@@ -237,12 +237,21 @@ draw_pit(P, player1, PitNo, BasicWidth/VSep/HSep/Padding, Colour) :-
 	draw_pit(P, Left/Top, BasicWidth , Colour).
 		
 start_new_game :-
+	set_game_state(new),
 	assert_pos,
 	draw_board_bg,
 	draw_all_pits,
-	set_game_state(waiting).
+	play.
 
 set_game_state(S):-
 	(retract(game_state(_)) ; true),
 	assert(game_state(S)).
 
+show_game_over_message:-
+	winner(Player),
+	player_win_message(Player, Message),
+	msgbox('Game over', Message, 0, _).
+
+player_win_message(player1, 'You won - the computer is useless').
+player_win_message(player2, 'The computer has won - good luk next time').
+player_win_message(tie, 'Tie - try again').

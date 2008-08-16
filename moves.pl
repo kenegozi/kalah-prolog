@@ -187,9 +187,8 @@ next_player(Turn/P1/P2, NextTurn/P1/P2):-
 next_player(player1, player2).
 next_player(player2, player1).
 
-%moves(Pos, PosList)
-%moves(Turn/P1Pits/P2Pits, PosList) :-
-
+% huristic function to evaluate board
+% positive values -> player 1 is winning, while negative values mean player 2 is winning
 h(_/P1Pits/P2Pits, Val) :- 
 	pits(PitsPerPlayer),!,
 	KalahIndex is PitsPerPlayer + 2,
@@ -232,3 +231,86 @@ player1_move(PitNo) :-
 	;
 		set_game_state(no_move)
 	).
+
+play(player2):-
+	pos(Pos),
+	Depth=5,
+	alphabeta( Pos, -3000, +3000, GoodPos, Val, Depth),
+	(var(GoodPos),!,
+		set_game_state(player2_nomove)
+	;
+		set_pos(GoodPos)
+	).
+
+
+game_over :-
+	game_state(game_over),!.
+
+game_over :-
+	pos(_/P1/P2),
+	P1=..[pits,_|P1PitsList],
+	P2=..[pits,_|P2PitsList],
+	are_all_pits_zeros(P1PitsList),
+	are_all_pits_zeros(P2PitsList).
+	
+	
+	
+play:-
+	game_over,!,
+	set_game_state(game_over),
+	show_game_over_message.
+
+play:-
+	turn(player1),!,
+	(player1_has_moves,!,
+		msgbox('Message', 'Your turn ...', 0, _),
+		set_game_state(waiting)
+	;
+		turn_over,
+		msgbox('Message', 'There''s no available move for you - turn over to computer :(', 0, _)
+	).
+
+play:-
+	turn(player2),!,
+	(player2_has_moves,!,
+		msgbox('Message', 'Computer''s turn ...', 0, _),
+		play(player2),
+		draw_all_pits
+	;
+		msgbox('Message', 'There''s no available move - turn over to you :)', 0, _),
+		turn_over
+	),
+	play.
+
+player1_has_moves:-
+	pos(_/P1/_),
+	P1=..[pits,_|P1PitsList],
+	(are_all_pits_zeros(P1PitsList),fail;true).
+player2_has_moves:-
+	pos(_/_/P2),
+	P2=..[pits,_|P2PitsList],
+	(are_all_pits_zeros(P2PitsList),fail;true).
+
+turn_over:-
+	pos(T/P1/P2),!,
+	next_player(T,N),
+	set_pos(N/P1/P2).
+
+
+are_all_pits_zeros([_]):-!.
+are_all_pits_zeros([0|Pits]):-
+	are_all_pits_zeros(Pits).
+
+	
+winner(Player):-
+	pos(Pos),
+	h(Pos, Val),
+	winner(Val,Player).
+
+winner(Val,player1):-
+	Val > 0,!.
+winner(Val,player2):-
+	Val < 0,!.
+winner(_,tie).
+	
+	

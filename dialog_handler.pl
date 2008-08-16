@@ -70,6 +70,9 @@ dialog_handler((dlg_game_board,10002),msg_button,_,_) :- !,
 	show_window(dlg_main_window),
 	wclose(dlg_game_board). 
 
+dialog_handler((dlg_game_board,10001),msg_button,_,_) :- !,
+	start_new_game.
+
 dialog_handler(dlg_game_board,msg_close,_,_) :- !,
 	show_window(dlg_main_window),
 	wclose(dlg_game_board). 
@@ -89,8 +92,6 @@ dialog_handler( (dlg_game_board,10000), msg_leftdown, (X, Y), _) :-!,
 	draw_all_pits,
 	set_game_state(waiting),
 	play.
-
-play.
 
 /*********************************************************************
 catch all
