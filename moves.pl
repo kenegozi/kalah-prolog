@@ -52,7 +52,12 @@ move(Pos, NewPos, [PitNumber|Inner]) :-
 	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
 	step(InitialPos, Turn/PitNumber, SeedsInHand, Pos1, LastBoard/LastPitNumber),
 	(is_kalah(LastPitNumber),!,
-		move(Pos1,NewPos, Inner)
+		(player2_has_moves(Pos1),!,
+			move(Pos1,NewPos, Inner)
+		;
+			next_player(Pos1, NewPos),
+			Inner=[]
+		)
 	;
 		collect_if_needed(Pos1, LastBoard/LastPitNumber, Pos2),
 		next_player(Pos2, NewPos),
@@ -234,7 +239,7 @@ player1_move(PitNo) :-
 
 play(player2):-
 	pos(Pos),
-	Depth=5,
+	depth(Depth),
 	alphabeta( Pos, -3000, +3000, GoodPos, Val, Depth),
 	(var(GoodPos),!,
 		set_game_state(player2_nomove)
@@ -285,11 +290,13 @@ play:-
 player1_has_moves:-
 	pos(_/P1/_),
 	P1=..[pits,_|P1PitsList],
-	(are_all_pits_zeros(P1PitsList),fail;true).
+	(are_all_pits_zeros(P1PitsList),!,fail;true).
 player2_has_moves:-
-	pos(_/_/P2),
+	pos(Pos),
+	player2_has_moves(Pos).
+player2_has_moves(_/_/P2):-
 	P2=..[pits,_|P2PitsList],
-	(are_all_pits_zeros(P2PitsList),fail;true).
+	(are_all_pits_zeros(P2PitsList),!,fail;true).
 
 turn_over:-
 	pos(T/P1/P2),!,

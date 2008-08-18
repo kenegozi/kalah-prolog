@@ -6,75 +6,106 @@
 	Usage		:	simply call run_tests/0
 ***********************************************************************/
 
-test(Fact/Test):-
-	current_predicate_under_test(Predicate),
-	retractall(test_def(Predicate/Fact/Test)),
-	assert(test_def(Predicate/Fact/Test)).
+all_tests([
+	test_in_moves_module,
+	tests_in_utils_module
+]).
 
-setup_tests(Predicate) :-
-	retractall(test_def(Predicate/_/_)),
-	assert(current_predicate_under_test(Predicate)).
 
-end_setup_tests:-
-	retractall(current_predicate_under_test(_)).
+run_tests :- 
+	clear_test_results,
+	all_tests(AllModules),
+	run_modules_tests(AllModules),
+	print_test_results.
 
-run_tests :-
+run_modules_tests([]) :- !.
+run_modules_tests([Module|T]) :-
+	Module(PredicatesToTests),
+	write('Testing module: '), write(Module), nl,
+	run_predicate_tests(PredicatesToTests),
+	run_modules_tests(T).
+
+run_predicate_tests([]) :- !.
+run_predicate_tests([PredicateToTest|T]) :-
+	PredicateToTest(Name, Tests),
+	write('Testing predicate: '), write(PredicateToTest), nl,
+	run_tests(Name, Tests),
+	run_predicate_tests(T).
+
+run_tests(_,[]) :- !.
+run_tests(Name, [Test|T]) :-
+	write('Running test: '), write(Test), write(' ... '),
+	(Test,!,
+		write('Passed'), nl,
+		test_result_passed(Name, Test)
+	;
+		write('Failed'), nl,
+		test_result_failed(Name, Test)
+	),
+	run_tests(Name, T).
+
+test_result_passed(Name, _):-
+	(retract(test_result(Name, Passed, FailedList)),!,
+		Passed1 is Passed + 1,
+		FailedList1=FailedList
+	;
+		Passed1=1,
+		FailedList1=[]
+	),
+	assert(test_result(Name, Passed1, FailedList1)).
+
+test_result_failed(Name, Test):-
+	(retract(test_result(Name, Passed, FailedList)),!,
+		Passed1=Passed,
+		FailedList1=[Test|FailedList]
+	;
+		Passed1=0,
+		FailedList1=[Test]
+	),
+	assert(test_result(Name, Passed1, FailedList1)).
+
+
+clear_test_results:-
+	retractall(test_result(_, _, _)).
+
+
+print_test_results:-
+	bagof(N/P/Fs, test_result(N,P,Fs), Results),
+	test_results_sum(Results, Passed, Failed),
+	nl,
+	write('total passed: '), write(Passed), nl,
+	len(Failed, F),
+	(F > 0,!,
+		write('total failed: '), write(F), nl,
+		print_failed_Tests(Failed)
+	;
+		write('all green :)'),nl
+	).
+
+print_failed_Tests([]):-!.
+print_failed_Tests([F|T]):-
+	write('  '), write(F), nl.
+
+
+test_results_sum([], 0, []):-!.
+test_results_sum(Results, Passed, Failed):-
+	test_results_sum(Results, 0, [], Passed, Failed).
+
+test_results_sum([], Passed, Failed, Passed, Failed):-!.
+test_results_sum([_/P/Fs|Tail], PassedUntilNow, FailedUntilNow, Passed, Failed):-
+	Passed1 is PassedUntilNow  + P,
+	conc(Fs, FailedUntilNow, Failed1),
+	test_results_sum(Tail, Passed1, Failed1, Passed, Failed).
+
+
+
+	/*
+	test__copy_list_and_add
 	dynamic(tests_stats/2),
 	bagof(P/Tests, bagof((Fact/Test), test_def(P/Fact/Test), Tests), TestsPerPredicate),
 	run_tests(TestsPerPredicate, Passed/Failed),
 	write_tests_summary(Passed/Failed).
-
-run_tests(TestsTestsPerPredicate, TotalPassed/TotalFailed) :-
-	run_tests(TestsTestsPerPredicate, 0/0, TotalPassed/TotalFailed).
-
-run_tests([], Passed/Failed, Passed/Failed):-!.
-
-run_tests([P/Tests|Rest], Passed/Failed, TotalPassed/TotalFailed):-
-	write('testing '), write(P), 
-	foreach_test(Tests, PassedInPredicate/FailedInPredicate),
-	write(' passed:'), write(PassedInPredicate),
-	(FailedInPredicate > 0, write(' failed:'), write(FailedInPredicate) ; true),
-	nl,
-	Passed1 is Passed + PassedInPredicate,
-	Failed1 is Failed + FailedInPredicate,
-	run_tests(Rest, Passed1/Failed1, TotalPassed/TotalFailed).
-
-foreach_test(Tests, Passed/Failed):-
-	foreach_test(Tests, 0/0, Passed/Failed).
-
-foreach_test([], Passed/Failed, Passed/Failed):-!.
-
-foreach_test([Fact/Test|Rest], Passed/Failed, NewPassed/NewFailed):-
-	assert((run_test:-Test)),
-	(
-		run_test, !,
-		NextPassed is Passed + 1,
-		NextFailed is Failed
-	;
-		NextFailed is Failed + 1,
-		NextPassed is Passed,
-		nl, write('   FAIL: '), write(Fact)
-	),
-	retract((run_test:-Test)),
-	foreach_test(Rest, NextPassed/NextFailed, NewPassed/NewFailed).
-
-
-write_tests_summary(Passed/0) :- !,
-	nl,
-	write(Passed), write(' tests passed :)'),
-	nl.
-
-write_tests_summary(Passed/Failed) :-
-	nl,
-	write(Passed), write(' tests passed, however'), nl,
-	write(Failed), write(' tests failed :('),
-	nl.
-
-reset_all_tests:-
-	retractall(run_test),
-	retractall(test_def(_/_/_)),
-	reconsult('moves_tests'),
-	reconsult('utils_tests').
+*/
 
 
 % Asserts

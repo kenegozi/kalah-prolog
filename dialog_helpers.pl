@@ -21,9 +21,9 @@ to_text(0, ` 0`):-!.
 
 
 % quick map from level to depth of search in tree
-level(3, `Easy`):-!.
+level(1, `Easy`):-!.
 level(5, `Regular`):-!.
-level(9, `Expert`):-!.
+level(13, `Expert`):-!.
 depth(D):-
 	level(L),!,
 	level(D,L).
