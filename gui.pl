@@ -177,6 +177,10 @@ set_level(L) :-
 	(retract(level(_)) ; true),!,
 	assert(level(L)).
 
+set_first(F) :-
+	(retract(first(_)) ; true),!,
+	assert(first(F)).
+
 
 assert_pos :-
 	pits(P),
@@ -186,7 +190,9 @@ assert_pos :-
 	create_list(P2PitsList, P, P),
 	conc(P2PitsList, [0], P2PitsListWithKalah),
 	P2Pits =.. [pits,player2|P2PitsListWithKalah],
-	set_pos(player1/P1Pits/P2Pits).
+	first(First),
+	to_player(First, Player),
+	set_pos(Player/P1Pits/P2Pits).
 
 set_pos(Pos) :-
 	(retract(pos(_)); true),

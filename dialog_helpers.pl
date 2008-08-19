@@ -20,10 +20,14 @@ to_text(9, ` 9`):-!.
 to_text(0, ` 0`):-!.
 
 
+% quick map from player name to player atom
+to_player(`Human`, player1):-!.
+to_player(`Computer`, player2):-!.
+
 % quick map from level to depth of search in tree
 level(1, `Easy`):-!.
-level(5, `Regular`):-!.
-level(13, `Expert`):-!.
+level(3, `Regular`):-!.
+level(5, `Expert`):-!.
 depth(D):-
 	level(L),!,
 	level(D,L).

@@ -46,8 +46,9 @@ select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
 move(P1Pits/P2Pits, player1-PitNumber/SeedsInHand, NewBoard) :-
 */	
 moves( Pos, PosList) :-
-	bagof(P, move(Pos, P, _), PosList).
-
+	bagof(P, move(Pos, P), PosList).
+move(Pos, NewPos):-
+	move(Pos, NewPos, _).
 move(Pos, NewPos, [PitNumber|Inner]) :-
 	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
 	step(InitialPos, Turn/PitNumber, SeedsInHand, Pos1, LastBoard/LastPitNumber),
@@ -193,15 +194,23 @@ next_player(player1, player2).
 next_player(player2, player1).
 
 % huristic function to evaluate board
-% positive values -> player 1 is winning, while negative values mean player 2 is winning
+% positive values -> player 2 is winning, while negative values mean player 1 is winning
 h(_/P1Pits/P2Pits, Val) :- 
 	pits(PitsPerPlayer),!,
 	KalahIndex is PitsPerPlayer + 2,
 	arg(KalahIndex, P1Pits, P1Kalah),
 	arg(KalahIndex, P2Pits, P2Kalah),!,
-	P1Factor is 2^P1Kalah,
-	P2Factor is 2^P2Kalah,
-	Val is P1Factor - P2Factor.
+	pits(Size),
+	EnoughToWin is Size^2 + 1,
+	(P1Kalah >= EnoughToWin,!,
+		Val is 0 - 3000
+	;
+		(P2Kalah >= EnoughToWin,!,
+			Val=3000
+		;
+			Val is P2Kalah - P1Kalah
+		)
+	).
 	
 
 %determine current player
@@ -244,6 +253,7 @@ play(player2):-
 	(var(GoodPos),!,
 		set_game_state(player2_nomove)
 	;
+		msgbox('Val',Val,0,_),
 		set_pos(GoodPos)
 	).
 
@@ -272,7 +282,8 @@ play:-
 		set_game_state(waiting)
 	;
 		turn_over,
-		msgbox('Message', 'There''s no available move for you - turn over to computer :(', 0, _)
+		msgbox('Message', 'There''s no available move for you - turn over to computer :(', 0, _),
+		play
 	).
 
 play:-
@@ -314,9 +325,9 @@ winner(Player):-
 	h(Pos, Val),
 	winner(Val,Player).
 
-winner(Val,player1):-
-	Val > 0,!.
 winner(Val,player2):-
+	Val > 0,!.
+winner(Val,player1):-
 	Val < 0,!.
 winner(_,tie).
 	

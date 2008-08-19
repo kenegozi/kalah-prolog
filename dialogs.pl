@@ -26,22 +26,25 @@ dlg_options :-
    _S5 = [ws_child,ws_visible,ws_tabstop,cbs_dropdownlist,cbs_autohscroll,cbs_disablenoscroll,ws_vscroll],
    _S6 = [ws_child,ws_tabstop,ws_visible,bs_pushbutton,bs_text,bs_center,bs_vcenter],
    wdcreate(  dlg_options,        `Options`,                   160,  45, 366, 256, _S1 ),
-   wccreate( (dlg_options,11001), static,   `Board size:`,      60,  70,  80,  20, _S3 ),
-   wccreate( (dlg_options,11002), static,   `Level:`,           60, 120,  80,  20, _S3 ),
-   wccreate( (dlg_options,5000),  combobox, `BoardSize`,        150,  70,  40,  80, _S4 ),
-   wccreate( (dlg_options,5001),  combobox, `Level`,            150, 120, 100,  80, _S5 ),
+   wccreate( (dlg_options,11001), static,   `Board size:`,      60,  40,  80,  20, _S3 ),
+   wccreate( (dlg_options,11002), static,   `Level:`,           60,  80,  80,  20, _S3 ),
+   wccreate( (dlg_options,11003), static,   `First:`,           60, 120,  80,  20, _S3 ),
+   wccreate( (dlg_options,5000),  combobox, `BoardSize`,        150,  40,  40,  80, _S4 ),
+   wccreate( (dlg_options,5001),  combobox, `Level`,            150,  80, 100,  80, _S5 ),
+   wccreate( (dlg_options,5002),  combobox, `First`,            150, 120, 100,  80, _S5 ),
    wccreate( (dlg_options,1000),  button,   `Start game`,       60,  160, 130,  30, _S6 ),
    wccreate( (dlg_options,1001),  button,   `Cancel`,           60,  190, 130,  30, _S6 ).
 on_show(dlg_options):-
 	set_combo_values((dlg_options,5000), 6, [4,5,6,7,8]),
-	set_combo_values((dlg_options,5001), `Regular`, [`Easy`,`Regular`,`Expert`]).
+	set_combo_values((dlg_options,5001), `Regular`, [`Easy`,`Regular`,`Expert`]),
+	set_combo_values((dlg_options,5002), `Human`, [`Human`,`Computer`]).
 
 
 /*Actual gameboard window*/
 dlg_game_board :- 
 	_S1 = [ws_sysmenu,ws_popup,ws_caption,dlg_ownedbyprolog],
 	_S2 = [ws_child,ws_border,ws_visible],
-	_S3 = [ws_child,ws_tabstop,ws_visible,bs_pushbutton,bs_text,bs_center,bs_vcenter],
+	_S3 = [ws_child,ws_visible,bs_pushbutton,bs_text,bs_center,bs_vcenter],
  
 	pits(Size),
 	board_size(Size, BoardWidth, BoardHeight),

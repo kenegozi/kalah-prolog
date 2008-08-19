@@ -34,6 +34,8 @@ dialog_handler((dlg_main_window,1000),msg_button,_,_) :- !,
 % 'Exit' button click
 dialog_handler((dlg_main_window,1001),msg_button,_,_) :- !,
 	wclose(dlg_main_window).
+dialog_handler(dlg_main_window,msg_close,_,_) :- !,
+	wclose(dlg_main_window).
 
 
 /*********************************************************************
@@ -48,6 +50,8 @@ dialog_handler((dlg_options,1000),msg_button,_,_) :- !,
 	show_window(dlg_game_board),
 	wtext( (dlg_options,5001), Level ), 
 	set_level(Level),
+	wtext( (dlg_options,5002), First ), 
+	set_first(First),
 	wclose(dlg_options),
 	assert_pit_map,
 	sleep(1000),
@@ -57,6 +61,10 @@ dialog_handler((dlg_options,1000),msg_button,_,_) :- !,
 dialog_handler((dlg_options,1001),msg_button,_,_) :- !,
 	show_window(dlg_main_window),
 	wclose(dlg_options). 
+dialog_handler(dlg_options,msg_close,_,_) :- !,
+	show_window(dlg_main_window),
+	wclose(dlg_options). 
+
 
 
 
