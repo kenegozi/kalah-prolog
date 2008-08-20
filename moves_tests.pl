@@ -126,48 +126,49 @@ moves - move
 ***********************************************************************/
 test__move__several_simple_options:-
 	set_pits(3),!,
-	bagof(P-N, move(player1/pits(player1,1,1,1,0)/pits(player2,1,1,1,0), P, N), Ps),
+	bagof(P, move(player1/pits(player1,1,1,1,0)/pits(player2,1,1,1,0), P), Ps),
 	Ps= [
-		player2 / pits(player1,0,0,1,3) / pits(player2,1,0,1,0)-[1],
-		player2 / pits(player1,1,0,0,3) / pits(player2,0,1,1,0)-[2],
-		player2 / pits(player1,0,0,0,4) / pits(player2,1,0,1,0)-[3,1],
-		player2 / pits(player1,1,0,0,3) / pits(player2,0,1,1,0)-[3,2]
+		player2 / pits(player1,0,0,1,3) / pits(player2,1,0,1,0) - 1 / 1 / special(player1 / 2 / 2 / 2 / 1),
+		player2 / pits(player1,1,0,0,3) / pits(player2,0,1,1,0) - 2 / 1 / special(player1 / 3 / 2 / 1 / 1),
+		player1 / pits(player1,1,1,0,1) / pits(player2,1,1,1,0) - 3 / 1 / kalah(player1)
 	].
 
 test__move__cross_to_next:-
 	set_pits(2),!,
-	bagof(P-N, move(player1/pits(player1,1,2,0)/pits(player2,1,1,0), P, N), Ps),
+	bagof(P, move(player1/pits(player1,1,2,0)/pits(player2,1,1,0), P), Ps),
 	Ps= [
-		player2 / pits(player1,0,0,4) / pits(player2,0,1,0)-[1],
-		player2 / pits(player1,1,0,1) / pits(player2,2,1,0)-[2]
+		player2 / pits(player1,0,0,4) / pits(player2,0,1,0) - 1 / 1 / special(player1 / 2 / 3 / 1 / 1),
+		player2 / pits(player1,1,0,1) / pits(player2,2,1,0) - 2 / 2 / _
 	].
 
 test__move__will_collect_when_opposite_is_not_empty:-
 	set_pits(2),!,
-	bagof(P-N, move(player1/pits(player1,1,0,0)/pits(player2,1,0,0), P, N), Ps),
+	bagof(P, move(player1/pits(player1,1,0,0)/pits(player2,1,0,0), P), Ps),
 	Ps= [
-		player2 / pits(player1,0,0,2) / pits(player2,0,0,0)-[1]
+		player2 / pits(player1,0,0,2) / pits(player2,0,0,0) - 1 / 1 / special(player1 / 2 / 1 / 1 / 1)
 	].
 
 test__move__will_not_collect_when_opposite_is_empty:-
 	set_pits(2),!,
-	bagof(P-N, move(player1/pits(player1,1,0,0)/pits(player2,0,1,0), P, N), Ps),
+	bagof(P, move(player1/pits(player1,1,0,0)/pits(player2,0,1,0), P), Ps),
 	Ps= [
-		player2 / pits(player1,0,1,0) / pits(player2,0,1,0)-[1]
+		player2 / pits(player1,0,1,0) / pits(player2,0,1,0) - 1 / 1 / _
 	].
 
 test__move__will_not_collect_when_end_in_opponent_pit:-
 	set_pits(2),!,
-	bagof(P-N, move(player1/pits(player1,1,3,0)/pits(player2,0,0,0), P, N), Ps),
+	bagof(P, move(player1/pits(player1,1,3,0)/pits(player2,0,0,0), P), Ps),
 	Ps= [
-		player2 / pits(player1,0,4,0) / pits(player2,0,0,0)-[1],
-		player2 / pits(player1,1,0,1) / pits(player2,1,1,0)-[2]
+		player2 / pits(player1,0,4,0) / pits(player2,0,0,0) - 1 / 1 / _,
+		player2 / pits(player1,1,0,1) / pits(player2,1,1,0) - 2 / 3 / _
 	].
 
 test__move__when_move_will_result_in_empty_pits_and_ends_in_kalah_will_find_the_move:-
 	set_pits(2),!,
-	move(player2/pits(player1,1,1,1)/pits(player2,0,1,0), P, _),
-	P=player1/pits(player1,1,1,1)/pits(player2,0,0,1).
+	bagof(P, move(player2/pits(player1,1,1,1)/pits(player2,0,1,0), P), Ps),
+	Ps=	[
+		player1 / pits(player1,1,1,1) / pits(player2,0,0,1) - 2 / 1 / kalah(player2)
+].
 
 test__move(`move`,[
 	test__move__several_simple_options,

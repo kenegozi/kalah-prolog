@@ -27,7 +27,7 @@ to_player(`Computer`, player2):-!.
 % quick map from level to depth of search in tree
 level(1, `Easy`):-!.
 level(3, `Regular`):-!.
-level(5, `Expert`):-!.
+level(6, `Expert`):-!.
 depth(D):-
 	level(L),!,
 	level(D,L).

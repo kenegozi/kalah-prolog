@@ -48,21 +48,25 @@ moves( Pos, PosList) :-
 move(Pos, NewPos-PitNumber/SeedsInHand/Special) :-
 	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
 	step(InitialPos, Turn/PitNumber, SeedsInHand, Pos1, LastBoard/LastPitNumber),
-	(is_kalah(LastPitNumber),!,
-		Special=kalah(Turn),
-		(player2_has_moves(Pos1),!,
-			Pos1 = NewPos		
-		;
-			next_player(Pos1, NewPos)
-		)
+	post_move(Pos1, LastBoard,LastPitNumber, Turn, NewPos, Special).
+
+post_move(Pos1, _,LastPitNumber, Turn, NewPos, Special):-
+	is_kalah(LastPitNumber),!,
+	Special=kalah(Turn),
+	(player2_has_moves(Pos1),!,
+		Pos1 = NewPos		
 	;
-		(collect(Pos1, LastBoard/LastPitNumber, Pos2, Special),!
-		;
-			Pos2=Pos1
-		),
-		next_player(Pos2, NewPos)
+		next_player(Pos1, NewPos)
 	).
 
+post_move(Pos1, LastBoard,LastPitNumber, _, NewPos, Special):-
+	(collect(Pos1, LastBoard/LastPitNumber, Pos2, Special),!
+	;
+		Pos2=Pos1
+	),
+	next_player(Pos2, NewPos).
+
+/**/
 
 collect(Turn/P1/P2, LastBoard/LastPitNumber, Turn/P11/P21, special(Turn/LastPitNumber/Seeds/OppositePitNo/SeedsInOppositePit)) :-
 	LastBoard=Turn,!,
@@ -338,3 +342,22 @@ winner(Val,player1):-
 winner(_,tie).
 	
 	
+
+ad(B):-
+repeat,
+	in_range(A,1-3),
+	(A=1,!,
+		B=11
+	;
+		B=A
+	),fail.
+
+
+ab(B):-
+	in_range(A,1-3),
+	ac(A,B).
+
+ac(1,11):-!.
+ac(A,A).
+
+
