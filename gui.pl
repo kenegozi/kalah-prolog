@@ -20,6 +20,9 @@ vertical_separator(10).
 horizontal_separator(20).
 padding(20).
 default_pit_colour(lightbrown).
+highlight_pit_colour(green).
+collected_pit_colour(yellow).
+highlighted_kalah_pit_colour(lightblue).
 default_bg_colour(brown).
 
 get_board_settings(BasicWidth/VSep/HSep/Padding) :-
@@ -31,18 +34,25 @@ get_board_settings(BasicWidth/VSep/HSep/Padding) :-
 
 
 set_brushes :-
-	gfx_brush_create(brush_blue,0,0,255,solid), 
-	gfx_brush_create(brush_lightbrown,190,181,174,solid), 
-	gfx_brush_create(brush_brown,124,106,93,solid), 
+	gfx_brush_create(brush_white,255,255,255,solid), 
 	gfx_brush_create(brush_red,255,0,0,solid), 
+	gfx_brush_create(brush_green,0,255,0,solid), 
+	gfx_brush_create(brush_blue,0,0,255,solid), 
+	gfx_brush_create(brush_yellow,255,255,20,solid), 
+	gfx_brush_create(brush_lightblue,155,170,20,solid), 
+	gfx_brush_create(brush_brown,124,106,93,solid), 
+	gfx_brush_create(brush_lightbrown,190,181,174,solid), 
 	gfx_font_create( font_pits, 'Arial', 17, normal ).
 
 
 % mapping colours to brushes
+get_brush(red, brush_red).
+get_brush(green, brush_green).
+get_brush(blue, brush_blue).
+get_brush(yellow, brush_yellow).
+get_brush(lightblue, brush_lightblue).
 get_brush(brown, brush_brown).
 get_brush(lightbrown, brush_lightbrown).
-get_brush(blue, brush_blue).
-get_brush(red, brush_red).
 
 
 /**************************************
@@ -157,15 +167,16 @@ draw_pits(Pits) :-
 draw_pits(Player, [P], PitNo, Settings, Colour) :- !,
 	draw_kalah(P, Player, PitNo, Settings, Colour).
 draw_pits(Player, [P|Ps], PitNo, Settings, Colour) :-
-	(Player=player1,!,
-		PitToDraw=PitNo
-	;
-		pits(Size),
-		PitToDraw is Size - PitNo + 1
-	),
+	pit_to_draw(Player,PitNo,PitToDraw),
 	draw_pit(P, Player, PitToDraw, Settings, Colour),
 	NextPitNo is PitNo + 1,
 	draw_pits(Player, Ps, NextPitNo, Settings, Colour).
+
+pit_to_draw(player1, PitNo, PitNo):-!.
+pit_to_draw(player2, PitNo, PitToDraw):-!,
+	pits(Size),
+	PitToDraw is Size - PitNo + 1.
+
 
 
 % set memory
@@ -180,6 +191,18 @@ set_level(L) :-
 set_first(F) :-
 	(retract(first(_)) ; true),!,
 	assert(first(F)).
+
+set_pit_played(Played) :-
+	(retract(pit_played(_)) ; true),!,
+	assert(pit_played(Played)).
+
+clear_special:-
+	(retract(special(_)) ; true),!.
+set_special(null) :-!,
+	clear_special.
+set_special(Special) :-
+	clear_special,
+	assert(special(Special)).
 
 
 assert_pos :-
@@ -259,5 +282,104 @@ show_game_over_message:-
 	msgbox('Game over', Message, 0, _).
 
 player_win_message(player1, 'You won - the computer is useless').
-player_win_message(player2, 'The computer has won - good luk next time').
+player_win_message(player2, 'The computer has won - better luck next time').
 player_win_message(tie, 'Tie - try again').
+
+add_message(M):-
+	(retract(messages(Ms)), ! ; Ms=[]),
+	assert(messages([M|Ms])).
+
+show_messages:-
+	(retract(messages(Ms)), ! ; Ms=[]),
+	assert(messages(Ms)),
+	gfx_begin((dlg_game_board,10003)),
+	clear_messages_area,
+	show_messages(Ms, 3),
+	gfx_end((dlg_game_board,10003)).
+
+show_messages([], _):-!.
+show_messages(_, 0):-!.
+show_messages([M|Ms], Line):-
+	write_message(M, Line),
+	Line1 is Line - 1,
+	show_messages(Ms, Line1).
+
+write_message(M, Line):-
+	X is 20,
+	Y is (Line - 1) * 15,
+	gfx((font=font_pits->
+		text(X,Y,M))).
+
+clear_messages_area:-
+	pits(Size),
+	board_size(Size, BoardWidth, _),
+	gfx((brush=brush_white->
+		rectangle(0, 0, BoardWidth, 50)
+		)).
+
+highlight_played_pit:-
+	(retract(pit_played(PitPlayed/SeedsInPit)),!,
+		game_board(Board),
+		gfx_begin(Board),
+		get_board_settings(Settings),
+		default_pit_colour(Colour),
+		highlight_pit_colour(HighlightColour),
+		pit_to_draw(player2,PitPlayed,PitToDraw),
+		draw_pit(SeedsInPit, player2, PitToDraw, Settings, HighlightColour),
+		sleep(400),
+		draw_pit(SeedsInPit, player2, PitToDraw, Settings, Colour),
+		sleep(400),
+		draw_pit(SeedsInPit, player2, PitToDraw, Settings, HighlightColour),
+		sleep(400),
+		draw_pit(SeedsInPit, player2, PitToDraw, Settings, Colour),
+		gfx_end(Board)
+	; true).
+
+highlight_special:-
+	retract(special(special(Turn/PitNo/Seeds/OppositePitNo/OppositeSeeds))),!,
+	game_board(Board),
+	gfx_begin(Board),
+	get_board_settings(Settings),
+	default_pit_colour(Colour),
+	collected_pit_colour(HighlightColour),
+	next_player(Turn, Opposite),
+	pit_to_draw(Turn,PitNo,PitToDraw),
+	pit_to_draw(Opposite,OppositePitNo,OppositePitToDraw),
+	draw_pit(Seeds, Turn, PitToDraw, Settings, HighlightColour),
+	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, HighlightColour),
+	sleep(400),
+	draw_pit(Seeds, Turn, PitToDraw, Settings, Colour),
+	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, Colour),
+	sleep(400),
+	draw_pit(Seeds, Turn, PitToDraw, Settings, HighlightColour),
+	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, HighlightColour),
+	sleep(400),
+	draw_pit(Seeds, Turn, PitToDraw, Settings, Colour),
+	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, Colour),
+	gfx_end(Board).
+
+highlight_special:-
+	retract(special(kalah(Turn))),!,
+	game_board(Board),
+	gfx_begin(Board),
+	get_board_settings(Settings),
+	highlighted_kalah_pit_colour(HighlightColour),
+	default_pit_colour(Colour),
+	is_kalah(PitNo),
+	pos(_/P1/P2),
+	(Turn=player1,!,
+		empty_pit(P1, PitNo, Seeds, _)
+	;
+		empty_pit(P2, PitNo, Seeds, _)
+	),
+	draw_kalah(Seeds, Turn, PitNo, Settings, HighlightColour),
+	sleep(400),
+	draw_kalah(Seeds, Turn, PitNo, Settings, Colour),
+	sleep(400),
+	draw_kalah(Seeds, Turn, PitNo, Settings, HighlightColour),
+	sleep(400),
+	draw_kalah(Seeds, Turn, PitNo, Settings, Colour),
+	gfx_end(Board).
+
+highlight_special:-!.
+

@@ -34,17 +34,17 @@ depth(D):-
 
 
 % messages
-message(player1_kalah,   'Kalah - you have another turn :)').
-message(player1_collect, 'You have just collected seeds from the computer :)').
-message(player2_kalah,   'Computer''s Kalah - he has have another turn :(').
-message(player2_collect, 'The computer has just collected seeds from you :(').
-message(player1_no_move, 'No moves left - turn over to computer :(').
-message(player2_no_move, 'No moves left - turn over to you :)').
+message(player1_kalah,   `Kalah - you have another turn :)`).
+message(player1_collect, `You have just collected seeds from the computer :)`).
+message(player2_kalah,   `Computer's Kalah - he has have another turn :(`).
+message(player2_collect, `The computer has just collected seeds from you :(`).
+message(player1_no_move, `No moves left - turn over to computer :(`).
+message(player2_no_move, `No moves left - turn over to you :)`).
 
 show_state_message:-
 	game_state(State),
 	message(State, Message),!,
-	msgbox('Message', Message,0,_).
+	add_message(Message).
 show_state_message.
 
 

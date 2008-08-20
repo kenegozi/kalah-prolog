@@ -42,35 +42,31 @@ select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
 	empty_pit(Pits, PitNumber, SeedsInHand, Pits1),
 	SeedsInHand > 0.
 
-/*
-move(P1Pits/P2Pits, player1-PitNumber/SeedsInHand, NewBoard) :-
-*/	
+
 moves( Pos, PosList) :-
 	bagof(P, move(Pos, P), PosList).
-move(Pos, NewPos):-
-	move(Pos, NewPos, _).
-move(Pos, NewPos, [PitNumber|Inner]) :-
+move(Pos, NewPos-PitNumber/SeedsInHand/Special) :-
 	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
 	step(InitialPos, Turn/PitNumber, SeedsInHand, Pos1, LastBoard/LastPitNumber),
 	(is_kalah(LastPitNumber),!,
+		Special=kalah(Turn),
 		(player2_has_moves(Pos1),!,
-			move(Pos1,NewPos, Inner)
+			Pos1 = NewPos		
 		;
-			next_player(Pos1, NewPos),
-			Inner=[]
+			next_player(Pos1, NewPos)
 		)
 	;
-		collect_if_needed(Pos1, LastBoard/LastPitNumber, Pos2),
-		next_player(Pos2, NewPos),
-		Inner=[]
+		(collect(Pos1, LastBoard/LastPitNumber, Pos2, Special),!
+		;
+			Pos2=Pos1
+		),
+		next_player(Pos2, NewPos)
 	).
 
 
-collect_if_needed(Turn/P1/P2, LastBoard/_, Turn/P1/P2) :-
-	not LastBoard=Turn,!.
-collect_if_needed(Turn/P1/P2, Turn/LastPitNumber, Turn/P1/P2) :-
-	is_kalah(LastPitNumber),!.
-collect_if_needed(Turn/P1/P2, Turn/LastPitNumber, Turn/P11/P21) :-
+collect(Turn/P1/P2, LastBoard/LastPitNumber, Turn/P11/P21, special(Turn/LastPitNumber/Seeds/OppositePitNo/SeedsInOppositePit)) :-
+	LastBoard=Turn,!,
+	not is_kalah(LastPitNumber),!,
 	opposite_pit(LastPitNumber, OppositePitNo),
 	(Turn=player1,!,
 		empty_pit(P2, OppositePitNo, SeedsInOppositePit, Emptied),
@@ -81,10 +77,10 @@ collect_if_needed(Turn/P1/P2, Turn/LastPitNumber, Turn/P11/P21) :-
 		P2_Temp=P2,
 		P1_Temp=Emptied
 	),
-	collect_if_needed(Turn/P1_Temp/P2_Temp, Turn/LastPitNumber, SeedsInOppositePit, Turn/P11/P21).
+	SeedsInOppositePit > 0,!,
+	collect(Turn/P1_Temp/P2_Temp, Turn/LastPitNumber, Seeds, SeedsInOppositePit, Turn/P11/P21).
 	
-collect_if_needed(Pos, _, 0, Pos) :- !.
-collect_if_needed(Turn/P1/P2, Turn/LastPitNo, SeedsInOppositePit, Turn/P11/P21) :-
+collect(Turn/P1/P2, Turn/LastPitNo, SeedsInPit, SeedsInOppositePit, Turn/P11/P21) :-
 	(Turn=player1,!,
 		empty_pit(P1, LastPitNo, SeedsInPit, Emptied),
 		ToAdd is SeedsInPit + SeedsInOppositePit,
@@ -214,8 +210,8 @@ h(_/P1Pits/P2Pits, Val) :-
 	
 
 %determine current player
-min_to_move(player1/_/_).
-max_to_move(player2/_/_).
+min_to_move(player1/_/_-_).
+max_to_move(player2/_/_-_).
 
 turn(Player) :-
 	pos(Player/_/_).
@@ -231,29 +227,34 @@ player1_move(PitNo) :-
 		step(InitialPos, player1/PitNo, SeedsInHand, Pos1, LastBoard/LastPitNumber),
 		(is_kalah(LastPitNumber),!,
 			set_pos(Pos1),
+			set_special(kalah(player1)),
 			set_game_state(player1_kalah)
 		;
-			collect_if_needed(Pos1, LastBoard/LastPitNumber, Pos2),
-			(Pos1\=Pos2,!,
+			(collect(Pos1, LastBoard/LastPitNumber, Pos2, Special),!,
+				set_special(Special),
 				set_game_state(player1_collect)
 			;
-				true
+				Pos2=Pos1
 			),
 			next_player(Pos2, NewPos),
 			set_pos(NewPos)
 		)
 	;
 		set_game_state(no_move)
-	).
+	),
+	highlight_special.
+
 
 play(player2):-
 	pos(Pos),
 	depth(Depth),
-	alphabeta( Pos, -3000, +3000, GoodPos, Val, Depth),
-	(var(GoodPos),!,
+	alphabeta( Pos, -3000, +3000, GoodPosWithMeta, _, Depth),
+	(var(GoodPosWithMeta),!,
 		set_game_state(player2_nomove)
 	;
-		msgbox('Val',Val,0,_),
+		GoodPosWithMeta=GoodPos-PitPlayed/SeedsInPit/Special,
+		set_pit_played(PitPlayed/SeedsInPit),
+		set_special(Special),
 		set_pos(GoodPos)
 	).
 
@@ -269,7 +270,6 @@ game_over :-
 	are_all_pits_zeros(P2PitsList).
 	
 	
-	
 play:-
 	game_over,!,
 	set_game_state(game_over),
@@ -277,23 +277,29 @@ play:-
 
 play:-
 	turn(player1),!,
+	add_message(`Your turn ...`),
+	show_messages,
+	sleep(1000),
 	(player1_has_moves,!,
-		msgbox('Message', 'Your turn ...', 0, _),
 		set_game_state(waiting)
 	;
 		turn_over,
-		msgbox('Message', 'There''s no available move for you - turn over to computer :(', 0, _),
+		add_message(`No more moves, turn over.`),
 		play
 	).
 
 play:-
 	turn(player2),!,
+	add_message(`Computer's turn ...`),
+	show_messages,
+	sleep(1000),
 	(player2_has_moves,!,
-		msgbox('Message', 'Computer''s turn ...', 0, _),
 		play(player2),
+		highlight_played_pit,
+		highlight_special,
 		draw_all_pits
 	;
-		msgbox('Message', 'There''s no available move - turn over to you :)', 0, _),
+		add_message(`No more moves, turn over.`),
 		turn_over
 	),
 	play.

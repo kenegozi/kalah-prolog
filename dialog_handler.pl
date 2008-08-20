@@ -88,7 +88,8 @@ dialog_handler(dlg_game_board,msg_close,_,_) :- !,
 
 dialog_handler( (dlg_game_board,10000), msg_paint, _, _) :-!,
 	draw_board_bg,
-	draw_all_pits.
+	draw_all_pits,
+	show_messages.
 
 dialog_handler( (dlg_game_board,10000), msg_leftdown, (X, Y), _) :-!,
 	game_state(waiting),
