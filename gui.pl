@@ -338,11 +338,11 @@ highlight_played_pit:-
 		highlight_pit_colour(HighlightColour),
 		pit_to_draw(player2,PitPlayed,PitToDraw),
 		draw_pit(SeedsInPit, player2, PitToDraw, Settings, HighlightColour),
-		sleep(400),
+		sleep(200),
 		draw_pit(SeedsInPit, player2, PitToDraw, Settings, Colour),
-		sleep(400),
+		sleep(200),
 		draw_pit(SeedsInPit, player2, PitToDraw, Settings, HighlightColour),
-		sleep(400),
+		sleep(200),
 		draw_pit(SeedsInPit, player2, PitToDraw, Settings, Colour),
 		gfx_end(Board)
 	; true).
@@ -361,13 +361,13 @@ highlight_special:-
 	pit_to_draw(Opposite,OppositePitNo,OppositePitToDraw),
 	draw_pit(Seeds, Turn, PitToDraw, Settings, HighlightColour),
 	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, HighlightColour),
-	sleep(400),
+	sleep(200),
 	draw_pit(Seeds, Turn, PitToDraw, Settings, Colour),
 	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, Colour),
-	sleep(400),
+	sleep(200),
 	draw_pit(Seeds, Turn, PitToDraw, Settings, HighlightColour),
 	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, HighlightColour),
-	sleep(400),
+	sleep(200),
 	draw_pit(Seeds, Turn, PitToDraw, Settings, Colour),
 	draw_pit(OppositeSeeds, Opposite, OppositePitToDraw, Settings, Colour),
 	gfx_end(Board).
@@ -387,11 +387,11 @@ highlight_special:-
 		empty_pit(P2, PitNo, Seeds, _)
 	),
 	draw_kalah(Seeds, Turn, PitNo, Settings, HighlightColour),
-	sleep(400),
+	sleep(200),
 	draw_kalah(Seeds, Turn, PitNo, Settings, Colour),
-	sleep(400),
+	sleep(200),
 	draw_kalah(Seeds, Turn, PitNo, Settings, HighlightColour),
-	sleep(400),
+	sleep(200),
 	draw_kalah(Seeds, Turn, PitNo, Settings, Colour),
 	gfx_end(Board).
 
