@@ -7,6 +7,7 @@
 ***********************************************************************/
 
 
+% entry pont - start the game
 start :-
 	set_brushes,
 	show_window(dlg_main_window).
@@ -25,6 +26,7 @@ collected_pit_colour(yellow).
 highlighted_kalah_pit_colour(lightblue).
 default_bg_colour(brown).
 
+% extracting settings from the database
 get_board_settings(BasicWidth/VSep/HSep/Padding) :-
 	basic_width(BasicWidth),
 	vertical_separator(VSep),
@@ -32,7 +34,7 @@ get_board_settings(BasicWidth/VSep/HSep/Padding) :-
 	padding(Padding).
 
 
-
+% setting gui brushes
 set_brushes :-
 	gfx_brush_create(brush_white,255,255,255,solid), 
 	gfx_brush_create(brush_red,255,0,0,solid), 
@@ -145,6 +147,7 @@ draw_kalah(P, player2, _, BasicWidth/_/HSep/Padding, Colour) :-
 	Right is Left + BasicWidth,
 	draw_pit(P, Left, Top, Right, Bottom, Colour).
 
+% redrawing all pits
 draw_all_pits:-
 	pos(_/P1/P2),!,
 	draw_all_pits(P1,P2).
@@ -171,6 +174,12 @@ draw_pits(Player, [P|Ps], PitNo, Settings, Colour) :-
 	draw_pit(P, Player, PitToDraw, Settings, Colour),
 	NextPitNo is PitNo + 1,
 	draw_pits(Player, Ps, NextPitNo, Settings, Colour).
+
+
+draw_pit(P, player1, PitNo, BasicWidth/VSep/HSep/Padding, Colour) :-
+	Top is Padding + BasicWidth + HSep,
+	Left is Padding + (BasicWidth + VSep) * PitNo,
+	draw_pit(P, Left/Top, BasicWidth , Colour).
 
 pit_to_draw(player1, PitNo, PitNo):-!.
 pit_to_draw(player2, PitNo, PitToDraw):-!,
@@ -204,24 +213,24 @@ set_special(Special) :-
 	clear_special,
 	assert(special(Special)).
 
-
-assert_pos :-
-	pits(P),
-	create_list(P1PitsList, P, P),
-	conc(P1PitsList, [0], P1PitsListWithKalah),
-	P1Pits =.. [pits,player1|P1PitsListWithKalah],
-	create_list(P2PitsList, P, P),
-	conc(P2PitsList, [0], P2PitsListWithKalah),
-	P2Pits =.. [pits,player2|P2PitsListWithKalah],
-	first(First),
-	to_player(First, Player),
-	set_pos(Player/P1Pits/P2Pits).
-
 set_pos(Pos) :-
 	(retract(pos(_)); true),
 	assert(pos(Pos)).
 
+set_game_state(S):-
+	(retract(game_state(_)) ; true),
+	assert(game_state(S)).
 
+pit(Pit) :-
+	pits(Size),
+	in_range(Pit, 1-Size).
+
+get_pit(X/Y, PitNo) :-
+	pit(Pit),
+	in_pit(X/Y, Pit),
+	Pit=PitNo.
+
+% asserting pit map for fast retreival - for determining mouse location
 assert_pit_map :-
 	(retract(map_player1_pit(_,_)); true),
 	get_board_settings(Settings),
@@ -243,28 +252,31 @@ assert_pit_map(PitNo, BasicWidth/VSep/HSep/Padding) :-
 	NextPit is PitNo - 1,
 	assert_pit_map(NextPit, BasicWidth/VSep/HSep/Padding).
 
+
+
+% assert initial pos based on game settings
+assert_pos :-
+	pits(P),
+	create_list(P1PitsList, P, P),
+	conc(P1PitsList, [0], P1PitsListWithKalah),
+	P1Pits =.. [pits,player1|P1PitsListWithKalah],
+	create_list(P2PitsList, P, P),
+	conc(P2PitsList, [0], P2PitsListWithKalah),
+	P2Pits =.. [pits,player2|P2PitsListWithKalah],
+	first(First),
+	to_player(First, Player),
+	set_pos(Player/P1Pits/P2Pits).
+
+
+% true if the XY (of mouse) is in human's pit no. PitNo
 in_pit(X/Y, PitNo):-
 	map_player1_pit(PitNo, Top/Left/Bottom/Right),
 	Y >= Top, Y =< Bottom,
 	X >= Left, X =<   Right.
 
-pit(Pit) :-
-	pits(Size),
-	in_range(Pit, 1-Size).
-
-get_pit(X/Y, PitNo) :-
-	pit(Pit),
-	in_pit(X/Y, Pit),
-	Pit=PitNo.
 
 	
-
-
-draw_pit(P, player1, PitNo, BasicWidth/VSep/HSep/Padding, Colour) :-
-	Top is Padding + BasicWidth + HSep,
-	Left is Padding + (BasicWidth + VSep) * PitNo,
-	draw_pit(P, Left/Top, BasicWidth , Colour).
-		
+%new game initialisation		
 start_new_game :-
 	set_game_state(new),
 	assert_pos,
@@ -272,10 +284,8 @@ start_new_game :-
 	draw_all_pits,
 	play.
 
-set_game_state(S):-
-	(retract(game_state(_)) ; true),
-	assert(game_state(S)).
 
+%show messages
 show_game_over_message:-
 	winner(Player),
 	player_win_message(Player, Message),
@@ -297,6 +307,7 @@ show_messages:-
 	show_messages(Ms, 3),
 	gfx_end((dlg_game_board,10003)).
 
+%write into the output console (messages area)
 show_messages([], _):-!.
 show_messages(_, 0):-!.
 show_messages([M|Ms], Line):-
@@ -317,6 +328,7 @@ clear_messages_area:-
 		rectangle(0, 0, BoardWidth, 50)
 		)).
 
+%obvious
 highlight_played_pit:-
 	(retract(pit_played(PitPlayed/SeedsInPit)),!,
 		game_board(Board),
@@ -335,6 +347,8 @@ highlight_played_pit:-
 		gfx_end(Board)
 	; true).
 
+%obvious
+%special is collect, or last seed put in kalah
 highlight_special:-
 	retract(special(special(Turn/PitNo/Seeds/OppositePitNo/OppositeSeeds))),!,
 	game_board(Board),
@@ -381,5 +395,6 @@ highlight_special:-
 	draw_kalah(Seeds, Turn, PitNo, Settings, Colour),
 	gfx_end(Board).
 
+%do not fail if the was no special n last move
 highlight_special:-!.
 

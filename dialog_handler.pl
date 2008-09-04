@@ -10,17 +10,6 @@
                         forwarding any uncatched event to Windows
 ***********************************************************************/
 
-/*
-%redirect to dialog_handler/2 for specified resultless and dataless handlers
-dialog_handler(W,M,_,_) :-
-
-	dialog_handler(W,M).
-
-%redirect to dialog_handler/3 for specified dataless handlers
-dialog_handler(W,M,D,_) :-
-	dialog_handler(W,M,D).
-*/
-
 
 /*********************************************************************
 dlg_main_window
@@ -107,7 +96,7 @@ catch all
 **********************************************************************/
 % forward any uncatched message to Windows API	
 dialog_handler(Window,Message,Data,Result) :- 
-/**
+/**  - can be used for auditing mouse and other windows API messages
 	write('W:'),write(Window),nl,
 	write('M:'),write(Message),nl,
 	write('D:'),write(Data),nl,

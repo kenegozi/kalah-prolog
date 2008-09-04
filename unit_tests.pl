@@ -99,15 +99,6 @@ test_results_sum([_/P/Fs|Tail], PassedUntilNow, FailedUntilNow, Passed, Failed):
 
 
 
-	/*
-	test__copy_list_and_add
-	dynamic(tests_stats/2),
-	bagof(P/Tests, bagof((Fact/Test), test_def(P/Fact/Test), Tests), TestsPerPredicate),
-	run_tests(TestsPerPredicate, Passed/Failed),
-	write_tests_summary(Passed/Failed).
-*/
-
-
 % Asserts
 assert_all_members_equal_to([], _).
 assert_all_members_equal_to([H|T], H) :-

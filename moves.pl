@@ -6,19 +6,24 @@
 ***********************************************************************/
 
 
+% gets the opposite pit number. example - for a 6 pit game, 
+% the opposite of 2 is 4, opposite of 3 is 3, et el.
 opposite_pit(PitNo, OppositePitNo) :-
 	is_kalah(KalahPitNo),
 	OppositePitNo is KalahPitNo - PitNo.
 
+% true if the given player1's pit is empty
 is_empty_pit(player1, P1Pits/_, PitNo) :- !,
 	ArgNo is PitNo + 1,
 	arg(ArgNo, P1Pits, 0), !.
 
+% true if the given player2's pit is empty
 is_empty_pit(player2, _/P2Pits, PitNo) :- !,
 	ArgNo is PitNo + 1,
 	arg(ArgNo, P2Pits, 0), !.
  
 
+% NewPits is Pits, with pit no PitNo emptied into Seeds
 empty_pit(Pits, PitNo, Seeds, NewPits) :-
 	Pits =.. PitsList,
 	NodeNo is PitNo + 2,
@@ -27,6 +32,8 @@ empty_pit(Pits, PitNo, Seeds, NewPits) :-
 
 
 %select_pit(Pos, MoveData, Pos1),
+%non deterministicly selecting a pit - Pos1 is Pos with 
+%emptied pit, and the MoveData saved
 select_pit(Turn/P1Pits/P2Pits, Turn-PitNumber/SeedsInHand, Turn/P1Pits1/P2Pits1) :-
 	(Turn=player1,!,
 		select_pit(P1Pits, PitNumber/SeedsInHand, P1Pits1),
@@ -43,13 +50,17 @@ select_pit(Pits, PitNumber/SeedsInHand, Pits1) :-
 	SeedsInHand > 0.
 
 
+% generating a list of all valid moves
 moves( Pos, PosList) :-
 	bagof(P, move(Pos, P), PosList).
+% non deterministicly generating a valid move
 move(Pos, NewPos-PitNumber/SeedsInHand/Special) :-
 	select_pit(Pos, Turn-PitNumber/SeedsInHand, InitialPos),
 	step(InitialPos, Turn/PitNumber, SeedsInHand, Pos1, LastBoard/LastPitNumber),
 	post_move(Pos1, LastBoard,LastPitNumber, Turn, NewPos, Special).
 
+% things that can happen at the end of a move:
+% last move is in kalah
 post_move(Pos1, _,LastPitNumber, Turn, NewPos, Special):-
 	is_kalah(LastPitNumber),!,
 	Special=kalah(Turn),
@@ -58,7 +69,7 @@ post_move(Pos1, _,LastPitNumber, Turn, NewPos, Special):-
 	;
 		next_player(Pos1, NewPos)
 	).
-
+%last move causes collection
 post_move(Pos1, LastBoard,LastPitNumber, _, NewPos, Special):-
 	(collect(Pos1, LastBoard/LastPitNumber, Pos2, Special),!
 	;
@@ -66,8 +77,7 @@ post_move(Pos1, LastBoard,LastPitNumber, _, NewPos, Special):-
 	),
 	next_player(Pos2, NewPos).
 
-/**/
-
+% collecting seeds from the pit and the opoosite pit into the kalah
 collect(Turn/P1/P2, LastBoard/LastPitNumber, Turn/P11/P21, special(Turn/LastPitNumber/Seeds/OppositePitNo/SeedsInOppositePit)) :-
 	LastBoard=Turn,!,
 	not is_kalah(LastPitNumber),!,
@@ -121,7 +131,7 @@ step(Turn/P1Pits/P2Pits, CurrentPlayerBoard/TakenFrom, SeedsInHand, Turn/NewP1Pi
 	).
 	
 % put_seeds/7
-% put_seeds(Turn, Pits, StartAt,SeedsInHand,NewPits, LastPitNo, SeedsLeft).
+% putting seeds from the hand onto the next pits
 put_seeds(Turn, Pits, StartAt, SeedsInHand, NewPits, LastPitNo, SeedsLeft) :-
 	Pits =.. [pits|PlayerAndPitsList],
 	len(PlayerAndPitsList, Length),
@@ -139,51 +149,6 @@ put_seeds(Turn, Pits, StartAt, SeedsInHand, NewPits, LastPitNo, SeedsLeft) :-
 	copy_list_and_add(PlayerAndPitsList, StartAt, ToAdd, PlayerAndPitsList1),
 	NewPits =.. [pits|PlayerAndPitsList1].
 
-
-% move a single step in a move - putting a seed from the player's
-% hand into the next pit.
-	
-	% determine collect
-	% determine ended_in_kalah->free_move
-step(Turn/P1Pits/P2Pits, LastPit, SeedsInHand, Turn/NewP1Pits/NewP2Pits, NewPit, NewSeedsInHand) :-
-	next_pit(Turn, LastPit, NewPitPlayer/NewPitNo),
-	SeedsInHand1 is SeedsInHand - 1,
-	(
-		NewPitPlayer = player2,!,
-		add_seed_to_pit(P2Pits, NewPitNo, NewP2Pits),
-		Board1 = P1Pits/NewP2Pits
-	;
-		add_seed_to_pit(P1Pits, NewPitNo, NewP1Pits),
-		Board1 = NewP1Pits/P2Pits
-	),
-	step(Turn/Board1, NewPitPlayer/NewPitNo, SeedsInHand1, Turn/NewP1Pits/NewP2Pits, NewPit, NewSeedsInHand).
-
-% determine the next pit that a seed should go into
-% will be the next player's pit, or his kalah after the last pit,
-% or the first pit of the oponent's after the player's kalah
-next_pit(Turn, LastPitPlayer/LastPitNo, NextPitPlayer/NextPitNo) :-
-	pits(PitsPerPlayer),
-	(
-		Turn = LastPitPlayer, !, 
-		MaxPitNo is PitsPerPlayer + 1
-	;
-		MaxPitNo is PitsPerPlayer
-	),
-	(
-		LastPitNo is MaxPitNo, !, 
-		next_player(LastPitPlayer, NextPitPlayer),
-		NextPitNo = 1
-	;
-		NextPitPlayer = LastPitPlayer,
-		NextPitNo is LastPitNo + 1
-	)
-	.
-
-% will add N seeds to the kalah of Pits
-add_to_kalah(Pits, N, NewPits) :-
-	Pits =.. PitsList,
-	add_to_last(PitsList, N, NewPitsList),
-	NewPits =.. NewPitsList.
 
 
 % switching players. straightforward
@@ -217,6 +182,7 @@ h(_/P1Pits/P2Pits, Val) :-
 min_to_move(player1/_/_-_).
 max_to_move(player2/_/_-_).
 
+% determine the current player
 turn(Player) :-
 	pos(Player/_/_).
 
@@ -225,6 +191,7 @@ is_kalah(K) :-
 	pits(P),
 	K is P + 1.
 
+% do a human move, staring in PitNo
 player1_move(PitNo) :-
 	pos(Pos),
 	(select_pit(Pos, player1-PitNo/SeedsInHand, InitialPos),!,
@@ -248,7 +215,7 @@ player1_move(PitNo) :-
 	),
 	highlight_special.
 
-
+% calling for a cpu move
 play(player2):-
 	pos(Pos),
 	depth(Depth),
@@ -263,9 +230,11 @@ play(player2):-
 	).
 
 
+% true if the game is over - look in the database
 game_over :-
 	game_state(game_over),!.
 
+% or in the current Pos
 game_over :-
 	pos(_/P1/P2),
 	P1=..[pits,_|P1PitsList],
@@ -273,12 +242,14 @@ game_over :-
 	are_all_pits_zeros(P1PitsList),
 	are_all_pits_zeros(P2PitsList).
 	
-	
+% The recurring 'playp' predicate -
+% what to do if the game is over
 play:-
 	game_over,!,
 	set_game_state(game_over),
 	show_game_over_message.
 
+% what to do if it's human's turn
 play:-
 	turn(player1),!,
 	add_message(`Your turn ...`),
@@ -292,6 +263,7 @@ play:-
 		play
 	).
 
+% what to do if it's cpu's turn
 play:-
 	turn(player2),!,
 	add_message(`Computer's turn ...`),
@@ -308,28 +280,34 @@ play:-
 	),
 	play.
 
+% name says it all
 player1_has_moves:-
 	pos(_/P1/_),
 	P1=..[pits,_|P1PitsList],
 	(are_all_pits_zeros(P1PitsList),!,fail;true).
+
+% name says it all
 player2_has_moves:-
 	pos(Pos),
 	player2_has_moves(Pos).
+
+% name says it all
 player2_has_moves(_/_/P2):-
 	P2=..[pits,_|P2PitsList],
 	(are_all_pits_zeros(P2PitsList),!,fail;true).
 
+% name says it all
 turn_over:-
 	pos(T/P1/P2),!,
 	next_player(T,N),
 	set_pos(N/P1/P2).
 
-
+% true if all given pits are empty
 are_all_pits_zeros([_]):-!.
 are_all_pits_zeros([0|Pits]):-
 	are_all_pits_zeros(Pits).
 
-	
+% determine winner	
 winner(Player):-
 	pos(Pos),
 	h(Pos, Val),
@@ -340,24 +318,10 @@ winner(Val,player2):-
 winner(Val,player1):-
 	Val < 0,!.
 winner(_,tie).
-	
-	
-
-ad(B):-
-repeat,
-	in_range(A,1-3),
-	(A=1,!,
-		B=11
-	;
-		B=A
-	),fail.
 
 
-ab(B):-
-	in_range(A,1-3),
-	ac(A,B).
-
-ac(1,11):-!.
-ac(A,A).
-
-
+% will add N seeds to the kalah of Pits 
+add_to_kalah(Pits, N, NewPits) :- 
+	Pits =.. PitsList, 
+	add_to_last(PitsList, N, NewPitsList), 
+	NewPits =.. NewPitsList.
